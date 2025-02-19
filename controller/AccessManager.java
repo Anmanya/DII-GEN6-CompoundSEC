@@ -20,7 +20,7 @@ public class AccessManager {
     }
 
     // ตรวจสอบการเข้าถึงโดยใช้ชื่อ, ห้อง และรหัสผ่าน
-    public boolean attemptAccess(String owner, String room, String password) {
+    public  boolean attemptAccess(String owner, String room, String password) {
         for (AccessCard card : cards) {
             if (card.getOwner().equals(owner)) {
                 boolean granted = card.hasAccess(room, password);
