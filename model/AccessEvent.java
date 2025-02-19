@@ -17,7 +17,7 @@ public class  AccessEvent {
     }
 
     @Override
-    public String toString() {
+    public String  toString() {
         return timestamp + " | User: " + user + " | Room: " + room + " | Access: " + (accessGranted ? "GRANTED" : "DENIED");
     }
 }
