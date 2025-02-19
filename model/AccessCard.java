@@ -15,7 +15,7 @@ public class AccessCard {
         this.cardId = cardId;
         this.owner = owner;
         this.accessibleRooms = new HashMap<>();
-        this.issuedAt = LocalDateTime.now();
+         this.issuedAt = LocalDateTime.now();
     }
 
 
