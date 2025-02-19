@@ -41,7 +41,6 @@ public class AccessManager {
         }
         return null;
     }
-
     public List<AccessEvent> getLogs() {
         return logs;
     }
