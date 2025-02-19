@@ -1,4 +1,4 @@
-package ggnamy.model;
+package ggnamy.model; m
 
 import java.time.LocalDateTime;
 
