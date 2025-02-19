@@ -6,9 +6,9 @@ import java.util.Map;
 import java.util.Set;
 
 public class AccessCard {
-    private String cardId;
-    private String owner;
-    private Map<String, String> accessibleRooms; // key: room name, value: password
+    private  String cardId;
+    private  String owner;
+    private  Map<String, String> accessibleRooms; // key: room name, value: password
     private LocalDateTime  issuedAt;
 
     public AccessCard(String cardId, String owner) {
