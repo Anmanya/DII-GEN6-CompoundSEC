@@ -8,7 +8,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.time.LocalDateTime;
 
-public class FancyAccessUI {
+public class FancyAccessUI  {
     private AccessManager manager;
     private JFrame loginFrame;
     private JFrame mainFrame;
