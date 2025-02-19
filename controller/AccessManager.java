@@ -6,6 +6,7 @@ import ggnamy.model.AccessEvent;
 import java.util.ArrayList;
 import java.util.List;
 
+
 public class AccessManager {
     private List<AccessCard> cards;
     private List<AccessEvent> logs;
