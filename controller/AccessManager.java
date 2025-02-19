@@ -7,8 +7,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class AccessManager {
-    private List<AccessCard> cards;
-    private List<AccessEvent> logs;
+    private  List<AccessCard> cards;
+    private  List<AccessEvent> logs;
 
     public AccessManager() {
         this.cards = new ArrayList<>();
@@ -28,7 +28,7 @@ public class AccessManager {
                 return granted;
             }
         }
-        logs.add(new AccessEvent(owner, room, false));
+        logs.add(new  AccessEvent(owner, room, false));
         return false;
     }
 
