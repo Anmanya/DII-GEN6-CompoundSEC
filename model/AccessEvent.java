@@ -3,7 +3,7 @@ package ggnamy.model; m
 import java.time.LocalDateTime;
 
 
-public class AccessEvent {
+public class  AccessEvent {
     private String user;
     private String room;
     private boolean accessGranted;
