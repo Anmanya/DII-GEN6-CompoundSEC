@@ -20,7 +20,7 @@ public class AccessCard {
 
 
     // กำหนดสิทธิ์ให้เข้าห้องพร้อมรหัสผ่าน
-    public void grantAccess(String room, String password) {
+    public void grantAccess (String room, String password) {
         accessibleRooms.put(room, password);
     }
 
