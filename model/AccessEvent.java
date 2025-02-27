@@ -21,4 +21,3 @@ public class  AccessEvent {
         return timestamp + " | User: " + user + " | Room: " + room + " | Access: " + (accessGranted ? "GRANTED" : "DENIED");
     }
 }
-
