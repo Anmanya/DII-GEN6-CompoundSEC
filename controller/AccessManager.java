@@ -7,11 +7,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class AccessManager {
-    private  List<AccessCard> cards;
-    private  List<AccessEvent> logs;
+    private final List<AccessCard> cards;
+    private final List<AccessEvent> logs;
 
-    public AccessManager() {
-        this.cards = new ArrayList<>();
+    public AccessManager() { //Strategy Pattern มันช่วยให้สามารถแยกการเข้าถึงออกจากกันโดยไม่ต้องแก้ไขโค้ดเดิมใน AccessCard หรือ AccessManager
+        this.cards = new ArrayList<>(); //ลิสเพื่อเกบบ
         this.logs = new ArrayList<>();
     }
 
@@ -19,8 +19,7 @@ public class AccessManager {
         cards.add(card);
     }
 
-    // ตรวจสอบการเข้าถึงโดยใช้ชื่อ, ห้อง และรหัสผ่าน
-    public  boolean attemptAccess(String owner, String room, String password) {
+    public boolean attemptAccess(String owner, String room, String password) { //Strategy Pattern ตรวจสอบสิทธิ์การเข้าถึงห้องช่วยให้สามารถสร้าง Strategy สำหรับการตรวจสอบการเข้าถึงประเภทต่าง ๆ ได้ โดยไม่ต้องแก้ไขโค้ดที่มีอยู่ใน AccessCard
         for (AccessCard card : cards) {
             if (card.getOwner().equals(owner)) {
                 boolean granted = card.hasAccess(room, password);
@@ -28,11 +27,10 @@ public class AccessManager {
                 return granted;
             }
         }
-        logs.add(new  AccessEvent(owner, room, false));
+        logs.add(new AccessEvent(owner, room, false));
         return false;
     }
 
-    // ค้นหาบัตรของผู้ใช้ตามชื่อ
     public AccessCard getCardForUser(String owner) {
         for (AccessCard card : cards) {
             if (card.getOwner().equals(owner)) {
@@ -41,7 +39,8 @@ public class AccessManager {
         }
         return null;
     }
-    public List<AccessEvent> getLogs() {
+
+    public List<AccessEvent> getLogs() { //คืนค่าลิสต์ของ AccessEvent
         return logs;
     }
 }

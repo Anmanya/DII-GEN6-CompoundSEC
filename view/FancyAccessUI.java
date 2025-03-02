@@ -1,49 +1,110 @@
-package ggnamy.view;
+package view;
 
 import ggnamy.controller.AccessManager;
 import ggnamy.model.AccessCard;
 import ggnamy.model.AccessEvent;
-
 import javax.swing.*;
 import java.awt.*;
+import java.time.DayOfWeek;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Date;
+import javax.swing.Timer;
 
-public class FancyAccessUI  {
+public class FancyAccessUI {
     private AccessManager manager;
     private JFrame loginFrame;
     private JFrame mainFrame;
     private AccessCard currentCard;
-    private int cardIdCounter = 3; // Counter for new user IDs
-    private String currentRole;    // "Admin" or "User"
-    private String currentFloor;   // "Low Floor", "Medium Floor", "High Floor"
+    private int cardIdCounter = 3;
+    private String currentRole;
+    private String currentFloor;
 
     public FancyAccessUI() {
-        // ใช้ Look-and-Feel ของระบบ
         try {
             UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-        } catch(Exception e) { }
+        } catch (Exception e) {}
         manager = new AccessManager();
         showRoleSelection();
+    }
+    private boolean isAccessAllowed(String username) { //Strategy Pattern ตรวจสอบการเข้าถึงตามผู้ใช้แต่ละคน
+        DayOfWeek today = LocalDate.now().getDayOfWeek();
+        if (username.equalsIgnoreCase("Ping")) {
+            return today == DayOfWeek.SATURDAY || today == DayOfWeek.SUNDAY;
+        } else if (username.equalsIgnoreCase("Fai")) {
+            return today != DayOfWeek.SATURDAY && today != DayOfWeek.SUNDAY;
+        }
+        return true; // ผู้ใช้คนอื่นสามารถเข้าได้ทุกวัน
+    }
+
+    // --- แก้ไขฟังก์ชันเข้าสู่ชั้นสำหรับ User ---
+    private boolean canEnterFloor(String username) {
+        if (!isAccessAllowed(username)) {
+            JOptionPane.showMessageDialog(null,
+                    "Access denied: " + username + " is not allowed today.",
+                    "Access Restricted", JOptionPane.WARNING_MESSAGE);
+            return false;
+        }
+        return true;
+    }
+
+    // --- สร้างปุ่มที่มีสไตล์ ---
+    private JButton createStyledButton(String text, Color bgColor, Color hoverColor) { //  Decorator Pattern เช่นเพิ่มวัน
+        JButton button = new JButton(text);
+        button.setPreferredSize(new Dimension(180, 50));
+        button.setBackground(bgColor);  // Background color
+        button.setForeground(Color.WHITE);  // White text
+        button.setFont(new Font("Arial", Font.BOLD, 16));  // ใช้ฟอนต์ตัวหนา
+        button.setFocusPainted(false);  // Remove focus ring
+        button.setBorder(BorderFactory.createLineBorder(new Color(30, 60, 90), 2));  // Blue border
+        button.setOpaque(true);
+        button.setBorderPainted(true);
+
+        button.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseEntered(java.awt.event.MouseEvent evt) {
+                button.setBackground(hoverColor);  // เปลี่ยนสีเมื่อเมาส์เข้า
+                button.setFont(new Font("Arial", Font.BOLD, 18));  // ทำให้ปุ่มใหญ่ขึ้นเล็กน้อย
+            }
+            public void mouseExited(java.awt.event.MouseEvent evt) {
+                button.setBackground(bgColor);  // รีเซ็ตสีเมื่อเมาส์ออก
+                button.setFont(new Font("Arial", Font.BOLD, 16));  // รีเซ็ตฟอนต์
+            }
+        });
+        return button;
     }
 
     // --- หน้าจอเลือกบทบาท ---
     private void showRoleSelection() {
         JFrame frame = new JFrame("Select Role");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.setSize(300, 150);
+        frame.setSize(350, 250);
         frame.setLayout(new BorderLayout(10, 10));
 
+        // กำหนดสีพื้นหลังเป็น Gradient
+        JPanel contentPanel = new JPanel() {
+            @Override
+            protected void paintComponent(Graphics g) {
+                super.paintComponent(g);
+                Graphics2D g2d = (Graphics2D) g;
+                GradientPaint gradient = new GradientPaint(0, 0, new Color(70, 130, 180), 0, getHeight(), new Color(30, 60, 90));
+                g2d.setPaint(gradient);
+                g2d.fillRect(0, 0, getWidth(), getHeight());
+            }
+        };
+        frame.add(contentPanel);
+        contentPanel.setLayout(new BorderLayout());
+
         JLabel label = new JLabel("Select Your Role", SwingConstants.CENTER);
-        frame.add(label, BorderLayout.NORTH);
+        label.setFont(new Font("Arial", Font.BOLD, 18));  // Larger font
+        label.setForeground(Color.WHITE);
+        contentPanel.add(label, BorderLayout.NORTH);
 
         JPanel panel = new JPanel();
-        JButton adminBtn = new JButton("Admin");
-        JButton userBtn = new JButton("User");
-        adminBtn.setPreferredSize(new Dimension(100, 40));
-        userBtn.setPreferredSize(new Dimension(100, 40));
+        JButton adminBtn = createStyledButton("Admin", new Color(70, 130, 180), new Color(100, 150, 220));
+        JButton userBtn = createStyledButton("User", new Color(60, 179, 113), new Color(85, 215, 135));  // Different color for User
         panel.add(adminBtn);
         panel.add(userBtn);
-        frame.add(panel, BorderLayout.CENTER);
+        contentPanel.add(panel, BorderLayout.CENTER);
 
         adminBtn.addActionListener(e -> {
             currentRole = "Admin";
@@ -64,12 +125,15 @@ public class FancyAccessUI  {
     private void showAdminLogin() {
         JFrame frame = new JFrame("Admin Login");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.setSize(300, 150);
-        frame.setLayout(new GridLayout(2, 2, 5, 5));
+        frame.setSize(350, 200);
+        frame.setLayout(new GridLayout(2, 2, 10, 10));
 
         JLabel label = new JLabel("Enter Admin Password:");
+        label.setFont(new Font("Arial", Font.PLAIN, 14));
         JPasswordField passwordField = new JPasswordField();
-        JButton loginBtn = new JButton("Login");
+        passwordField.setFont(new Font("Arial", Font.PLAIN, 16));
+        passwordField.setBorder(BorderFactory.createLineBorder(new Color(70, 130, 180), 2));  // Add border for input field
+        JButton loginBtn = createStyledButton("Login", new Color(70, 130, 180), new Color(100, 150, 220));
 
         frame.add(label);
         frame.add(passwordField);
@@ -78,7 +142,7 @@ public class FancyAccessUI  {
 
         loginBtn.addActionListener(e -> {
             String password = new String(passwordField.getPassword()).trim();
-            if (password.equals("12345678")) {
+            if (password.equals("1234")) {
                 frame.dispose();
                 showLogin();
             } else {
@@ -94,15 +158,21 @@ public class FancyAccessUI  {
     private void showLogin() {
         loginFrame = new JFrame("Secure Access System - Login");
         loginFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        loginFrame.setSize(300, 200);
-        loginFrame.setLayout(new GridLayout(3, 2, 5, 5));
+        loginFrame.setSize(350, 250);
+        loginFrame.setLayout(new GridLayout(3, 2, 10, 10));
 
         JLabel userLabel = new JLabel("Username:");
+        userLabel.setFont(new Font("Arial", Font.PLAIN, 14));
         JTextField userField = new JTextField();
+        userField.setFont(new Font("Arial", Font.PLAIN, 16));
+        userField.setBorder(BorderFactory.createLineBorder(new Color(70, 130, 180), 2)); // Add border
         JLabel dateLabel = new JLabel("Date/Time:");
+        dateLabel.setFont(new Font("Arial", Font.PLAIN, 14));
         JTextField dateField = new JTextField(LocalDateTime.now().toString());
+        dateField.setFont(new Font("Arial", Font.PLAIN, 16));
         dateField.setEditable(false);
-        JButton loginBtn = new JButton("Login");
+        dateField.setBorder(BorderFactory.createLineBorder(new Color(70, 130, 180), 2)); // Add border for date field
+        JButton loginBtn = createStyledButton("Login", new Color(70, 130, 180), new Color(100, 150, 220));
 
         loginFrame.add(userLabel);
         loginFrame.add(userField);
@@ -117,19 +187,15 @@ public class FancyAccessUI  {
                 JOptionPane.showMessageDialog(loginFrame, "Please enter a username.", "Input Error", JOptionPane.ERROR_MESSAGE);
                 return;
             }
-            // ดึงหรือสร้าง AccessCard ใหม่
             currentCard = manager.getCardForUser(username);
             if (currentCard == null) {
                 currentCard = new AccessCard(String.format("%03d", cardIdCounter++), username);
                 if (currentRole.equals("User")) {
-                    // สำหรับผู้ใช้งานทั่วไป ให้กำหนดรหัสผ่านสำหรับบางห้องเท่านั้น
                     currentCard.grantAccess("Guest Room", "1234");
                     currentCard.grantAccess("Dining Room", "1234");
                     currentCard.grantAccess("Fitness Center", "1234");
                     currentCard.grantAccess("Conference Room", "1234");
-                    // ผู้ใช้ทั่วไปไม่มีสิทธิ์เข้าห้องใน High Floor
-                } else { // Admin
-                    // Admin เข้าถึงห้องทุกห้องได้โดยไม่ต้องใส่รหัสผ่าน
+                } else {
                     currentCard.grantAccess("Guest Room", "");
                     currentCard.grantAccess("Dining Room", "");
                     currentCard.grantAccess("Fitness Center", "");
@@ -153,23 +219,48 @@ public class FancyAccessUI  {
     private void showFloorSelection() {
         JFrame floorFrame = new JFrame("Select Floor");
         floorFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        floorFrame.setSize(350, 150);
+        floorFrame.setSize(400, 450);
         floorFrame.setLayout(new BorderLayout(10, 10));
+        floorFrame.getRootPane().setBorder(BorderFactory.createEmptyBorder(15, 15, 15, 15));
 
-        JLabel label = new JLabel("Select a Floor", SwingConstants.CENTER);
+        JLabel label = new JLabel("Select Floor", SwingConstants.CENTER);
+        label.setFont(new Font("Arial", Font.BOLD, 20));
         floorFrame.add(label, BorderLayout.NORTH);
 
-        JPanel panel = new JPanel();
-        JButton lowBtn = new JButton("Low Floor");
-        JButton mediumBtn = new JButton("Medium Floor");
-        JButton highBtn = new JButton("High Floor");
-        lowBtn.setPreferredSize(new Dimension(100, 40));
-        mediumBtn.setPreferredSize(new Dimension(100, 40));
-        highBtn.setPreferredSize(new Dimension(100, 40));
+        JPanel panel = new JPanel(new GridLayout(0, 1, 10, 10));
+        panel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+
+        JButton lowBtn = createStyledButton("Low Floor", new Color(70, 130, 180), new Color(100, 150, 220));
+        JButton mediumBtn = createStyledButton("Medium Floor", new Color(60, 179, 113), new Color(85, 215, 135));
+        JButton highBtn = createStyledButton("High Floor", new Color(255, 69, 0), new Color(255, 99, 71));
         panel.add(lowBtn);
         panel.add(mediumBtn);
         panel.add(highBtn);
+
+        if (currentRole.equals("Admin")) {
+            JButton modifyBtn = createStyledButton("Modify Card", new Color(186, 85, 211), new Color(117, 115, 115));
+            JButton addBtn = createStyledButton("Add Card", new Color(255, 215, 0), new Color(255, 239, 88));
+            JButton revokeBtn = createStyledButton("Revoke Card", new Color(255, 105, 180), new Color(255, 182, 193));
+            panel.add(modifyBtn);
+            panel.add(addBtn);
+            panel.add(revokeBtn);
+
+            modifyBtn.addActionListener(e -> modifyAccess());
+            addBtn.addActionListener(e -> addCard());
+            revokeBtn.addActionListener(e -> revokeCard());
+        }
+
         floorFrame.add(panel, BorderLayout.CENTER);
+
+        JPanel bottomPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
+        JButton backBtn = createStyledButton("Back", new Color(169, 169, 169), new Color(192, 192, 192));
+        bottomPanel.add(backBtn);
+        floorFrame.add(bottomPanel, BorderLayout.SOUTH);
+
+        backBtn.addActionListener(e -> {
+            floorFrame.dispose();
+            showLogin();
+        });
 
         lowBtn.addActionListener(e -> {
             currentFloor = "Low Floor";
@@ -192,33 +283,25 @@ public class FancyAccessUI  {
     }
 
     // --- หน้าจอ Main Menu แสดงตัวเลือกห้องตามชั้น ---
-    // --- หน้าจอ Main Menu แสดงตัวเลือกห้องตามชั้น ---
     private void showMainMenu(String floor) {
         mainFrame = new JFrame("Main Menu - " + currentCard.getOwner() + " (" + floor + ")");
         mainFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        mainFrame.setSize(500, 400);
+        mainFrame.setSize(600, 500);
         mainFrame.setLayout(new BorderLayout(10, 10));
 
         JLabel label = new JLabel("Select a Room to Access on " + floor, SwingConstants.CENTER);
-        label.setFont(new Font("SansSerif", Font.BOLD, 18));
+        label.setFont(new Font("SansSerif", Font.BOLD, 20));
         mainFrame.add(label, BorderLayout.NORTH);
 
-        // กำหนดรายชื่อห้อง (ทั้งหมด) สำหรับแต่ละชั้น
-        String[] rooms;
-        if (floor.equals("Low Floor")) {
-            rooms = new String[]{"Guest Room", "Dining Room", "Restroom", "Lobby", "Storage"};
-        } else if (floor.equals("Medium Floor")) {
-            rooms = new String[]{"Fitness Center", "Conference Room", "Meeting Room", "Break Room", "Office"};
-        } else { // High Floor
-            rooms = new String[]{"Executive Office", "Board Room", "Private Lounge", "VIP Suite"};
-        }
+        String[] rooms = floor.equals("Low Floor") ? new String[]{"Guest Room", "Dining Room", "Restroom", "Lobby", "Storage"}
+                : floor.equals("Medium Floor") ? new String[]{"Fitness Center", "Conference Room", "Meeting Room", "Break Room", "Office"}
+                : new String[]{"Executive Office", "Board Room", "Private Lounge", "VIP Suite"};
 
-        JPanel roomPanel = new JPanel(new GridLayout(0, 2, 10, 10));
+        JPanel roomPanel = new JPanel(new GridLayout(0, 2, 15, 15));
         for (String room : rooms) {
-            JButton btn = new JButton(room);
-            btn.setPreferredSize(new Dimension(150, 50));
+            JButton btn = createStyledButton(room, new Color(70, 130, 180), new Color(100, 150, 220));
+            btn.setPreferredSize(new Dimension(150, 60));
             btn.addActionListener(e -> {
-                // หากเป็น Admin ให้เข้าห้องได้ทุกห้องโดยไม่ตรวจสอบ
                 if (currentRole.equals("Admin") || currentCard.getAccessibleRooms().contains(room)) {
                     if (currentRole.equals("User")) {
                         openRoomWindowForUser(room);
@@ -237,11 +320,11 @@ public class FancyAccessUI  {
 
         JPanel bottomPanel = new JPanel();
         if (currentRole.equals("Admin")) {
-            JButton manageLogsBtn = new JButton("Manage Logs");
+            JButton manageLogsBtn = createStyledButton("Manage Logs", new Color(70, 130, 180), new Color(100, 150, 220));
             manageLogsBtn.addActionListener(e -> showManageLogs());
             bottomPanel.add(manageLogsBtn);
         }
-        JButton logoutBtn = new JButton("Logout");
+        JButton logoutBtn = createStyledButton("Logout", new Color(255, 69, 0), new Color(255, 99, 71));
         logoutBtn.addActionListener(e -> {
             mainFrame.dispose();
             showRoleSelection();
@@ -255,12 +338,18 @@ public class FancyAccessUI  {
 
     // --- หน้าต่างสำหรับการเข้าห้อง (สำหรับ User) ---
     private void openRoomWindowForUser(String room) {
+        if (!canEnterFloor(currentCard.getOwner())) {
+            return;
+        }
+
         JFrame roomFrame = new JFrame("Access " + room);
-        roomFrame.setSize(300, 150);
-        roomFrame.setLayout(new GridLayout(3, 1, 5, 5));
+        roomFrame.setSize(350, 200);
+        roomFrame.setLayout(new GridLayout(3, 1, 10, 10));
 
         JLabel label = new JLabel("Enter password for " + room + ":", SwingConstants.CENTER);
+        label.setFont(new Font("Arial", Font.PLAIN, 14));
         JPasswordField pwdField = new JPasswordField();
+        pwdField.setFont(new Font("Arial", Font.PLAIN, 16));
         JPanel btnPanel = new JPanel();
         JButton enterBtn = new JButton("Enter");
         JButton backBtn = new JButton("Back");
@@ -289,6 +378,7 @@ public class FancyAccessUI  {
         roomFrame.setVisible(true);
     }
 
+
     // --- สำหรับ Admin: เข้าห้องโดยไม่ต้องใส่รหัสผ่าน ---
     private void openRoomWindowForAdmin(String room) {
         AccessEvent event = new AccessEvent(currentCard.getOwner(), room, true);
@@ -302,7 +392,7 @@ public class FancyAccessUI  {
     // --- หน้าต่างสำหรับจัดการ Log (สำหรับ Admin เท่านั้น) ---
     private void showManageLogs() {
         JFrame manageFrame = new JFrame("Manage Logs");
-        manageFrame.setSize(500, 300);
+        manageFrame.setSize(600, 400);
         manageFrame.setLayout(new BorderLayout(10, 10));
 
         DefaultListModel<String> listModel = new DefaultListModel<>();
@@ -314,44 +404,9 @@ public class FancyAccessUI  {
         manageFrame.add(scrollPane, BorderLayout.CENTER);
 
         JPanel bottomPanel = new JPanel();
-        JButton deleteBtn = new JButton("Delete Selected");
-        JButton addBtn = new JButton("Add Log");
-        JButton closeBtn = new JButton("Close");
-        bottomPanel.add(deleteBtn);
-        bottomPanel.add(addBtn);
+        JButton closeBtn = createStyledButton("Close", new Color(255, 69, 0), new Color(255, 99, 71));
         bottomPanel.add(closeBtn);
         manageFrame.add(bottomPanel, BorderLayout.SOUTH);
-
-        deleteBtn.addActionListener(e -> {
-            int selectedIndex = logList.getSelectedIndex();
-            if (selectedIndex != -1) {
-                manager.getLogs().remove(selectedIndex);
-                listModel.remove(selectedIndex);
-            }
-        });
-
-        addBtn.addActionListener(e -> {
-            JTextField userField = new JTextField();
-            JTextField roomField = new JTextField();
-            String[] options = {"GRANTED", "DENIED"};
-            JComboBox<String> accessCombo = new JComboBox<>(options);
-            JPanel panel = new JPanel(new GridLayout(0, 1));
-            panel.add(new JLabel("User:"));
-            panel.add(userField);
-            panel.add(new JLabel("Room:"));
-            panel.add(roomField);
-            panel.add(new JLabel("Access:"));
-            panel.add(accessCombo);
-            int result = JOptionPane.showConfirmDialog(manageFrame, panel, "Add Log", JOptionPane.OK_CANCEL_OPTION);
-            if (result == JOptionPane.OK_OPTION) {
-                String user = userField.getText().trim();
-                String room = roomField.getText().trim();
-                boolean accessGranted = accessCombo.getSelectedItem().equals("GRANTED");
-                AccessEvent newEvent = new AccessEvent(user, room, accessGranted);
-                manager.getLogs().add(newEvent);
-                listModel.addElement(newEvent.toString());
-            }
-        });
 
         closeBtn.addActionListener(e -> manageFrame.dispose());
 
@@ -359,8 +414,115 @@ public class FancyAccessUI  {
         manageFrame.setVisible(true);
     }
 
-    // --- Main Method ---
+    private void modifyAccess(){
+        String username = JOptionPane.showInputDialog("Enter username to modify access:");
+        if (username != null && !username.trim().isEmpty()) {
+            AccessCard card = manager.getCardForUser(username);
+            if (card != null) {
+                String[] floors = {"Low Floor", "Medium Floor", "High Floor"};
+                String selectedFloor = (String) JOptionPane.showInputDialog(
+                        null, "Select Floor:", "Floor Selection",
+                        JOptionPane.QUESTION_MESSAGE, null, floors, floors[0]);
+
+                if (selectedFloor != null) {
+                    String[] rooms;
+                    switch (selectedFloor) {
+                        case "Low Floor":
+                            rooms = new String[]{"Guest Room", "Dining Room", "Restroom", "Lobby", "Storage"};
+                            break;
+                        case "Medium Floor":
+                            rooms = new String[]{"Fitness Center", "Conference Room", "Meeting Room", "Break Room", "Office"};
+                            break;
+                        case "High Floor":
+                            rooms = new String[]{"Executive Office", "Board Room", "Private Lounge", "VIP Suite", "Sky Lounge"};
+                            break;
+                        default:
+                            return;
+                    }
+
+                    JList<String> roomList = new JList<>(rooms);
+                    roomList.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
+                    JScrollPane scrollPane = new JScrollPane(roomList);
+                    int option = JOptionPane.showConfirmDialog(null, scrollPane, "Modify Accessible Rooms", JOptionPane.OK_CANCEL_OPTION);
+
+                    if (option == JOptionPane.OK_OPTION) {
+                        if (card.getAccessibleRooms() != null) {
+                            card.getAccessibleRooms().clear();
+                        }
+                        for (String room : roomList.getSelectedValuesList()) {
+                            card.grantAccess(room, "1234");
+                        }
+                        JOptionPane.showMessageDialog(null, "Access permissions updated successfully.");
+                    }
+                }
+            } else {
+                JOptionPane.showMessageDialog(null, "User not found.");
+            }
+        }
+    }
+
+    private void addCard(){
+        String username = JOptionPane.showInputDialog("Enter new username:");
+        if (username != null && !username.trim().isEmpty()) {
+            String[] floors = {"Low Floor", "Medium Floor", "High Floor"};
+            String selectedFloor = (String) JOptionPane.showInputDialog(
+                    null, "Select Floor:", "Floor Selection",
+                    JOptionPane.QUESTION_MESSAGE, null, floors, floors[0]);
+
+            if (selectedFloor != null) {
+                String[] rooms;
+                switch (selectedFloor) {
+                    case "Low Floor":
+                        rooms = new String[]{"Guest Room", "Dining Room", "Restroom", "Lobby", "Storage"};
+                        break;
+                    case "Medium Floor":
+                        rooms = new String[]{"Fitness Center", "Conference Room", "Meeting Room", "Break Room", "Office"};
+                        break;
+                    case "High Floor":
+                        rooms = new String[]{"Executive Office", "Board Room", "Private Lounge", "VIP Suite", "Sky Lounge"};
+                        break;
+                    default:
+                        return;
+                }
+
+                JList<String> roomList = new JList<>(rooms);
+                roomList.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
+                JScrollPane scrollPane = new JScrollPane(roomList);
+                int option = JOptionPane.showConfirmDialog(null, scrollPane, "Select Accessible Rooms", JOptionPane.OK_CANCEL_OPTION);
+
+                if (option == JOptionPane.OK_OPTION) {
+                    AccessCard newCard = new AccessCard(String.format("%03d", cardIdCounter++), username);
+                    for (String room : roomList.getSelectedValuesList()) {
+                        newCard.grantAccess(room, "1234");
+                    }
+                    manager.registerCard(newCard);
+                    JOptionPane.showMessageDialog(null, "Card added successfully for " + username);
+                }
+            }
+        }
+    }
+
+    private void revokeCard(){
+        String username = JOptionPane.showInputDialog("Enter username to revoke access card:");
+        if (username != null && !username.trim().isEmpty()) {
+            AccessCard card = manager.getCardForUser(username);
+            if (card != null) {
+                int confirm = JOptionPane.showConfirmDialog(null,
+                        "Are you sure you want to revoke the access permissions for " + username + "?",
+                        "Confirm Revocation",
+                        JOptionPane.YES_NO_OPTION);
+                if (confirm == JOptionPane.YES_OPTION) {
+                    card.getAccessibleRooms().clear();
+                    JOptionPane.showMessageDialog(null, "Access permissions for " + username + " have been revoked.");
+                }
+            } else {
+                JOptionPane.showMessageDialog(null, "User not found.");
+            }
+        }
+    }
+
     public static void main(String[] args) {
         SwingUtilities.invokeLater(FancyAccessUI::new);
     }
 }
+
