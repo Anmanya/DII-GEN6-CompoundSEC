@@ -20,4 +20,5 @@ public class AccessEvent { // Factory Pattern ใช้ในการสร้�
     public String toString() {
         return timestamp + " | User: " + user + " | Room: " + room + " | Access: " + (accessGranted ? "GRANTED" : "DENIED");
     }
+
 }

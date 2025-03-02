@@ -42,5 +42,6 @@ public class AccessManager {
 
     public List<AccessEvent> getLogs() { //คืนค่าลิสต์ของ AccessEvent
         return logs;
+
     }
 }

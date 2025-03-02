@@ -33,5 +33,6 @@ public class AccessCard { //Singleton Pattern สามารถใช้ใน�
     public Set<String> getAccessibleRooms() {
         return accessibleRooms.keySet();
     }
+
 }
 

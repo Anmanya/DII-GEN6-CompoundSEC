@@ -524,5 +524,6 @@ public class FancyAccessUI {
     public static void main(String[] args) {
         SwingUtilities.invokeLater(FancyAccessUI::new);
     }
+
 }
 
